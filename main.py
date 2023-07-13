@@ -11,6 +11,7 @@ import requests
 class EUnit(Enum):
     GiB = "GiB"
     MiB = "MiB"
+    KiB = "KiB"
 
 
 G_LINK = "link"
@@ -87,10 +88,14 @@ class Game:
             return self.size
         if self.unit == EUnit.MiB:
             return self.size / 1024
+        if self.unit == EUnit.KiB:
+            return self.size / 1024 / 1024
         raise Exception("Invalid unit")
 
     @property
     def mib(self) -> float:
+        if self.unit == EUnit.KiB:
+            return self.size / 1024
         if self.unit == EUnit.MiB:
             return self.size
         if self.unit == EUnit.GiB:
@@ -99,7 +104,7 @@ class Game:
 
 
 def _parse_games(content: str) -> List[Game]:
-    pattern = rf'<tr><td><a href=\"(?P<{G_LINK}>.+)\" title=\".*\">(?P<{G_TITLE}>.*)</a></td><td>(?P<{G_SIZE}>.+) (?P<{G_UNIT}>MiB|GiB)</td><td>.*</td></tr>'
+    pattern = rf'<tr><td><a href=\"(?P<{G_LINK}>.+)\" title=\".*\">(?P<{G_TITLE}>.*)</a></td><td>(?P<{G_SIZE}>.+) (?P<{G_UNIT}>KiB|MiB|GiB)</td><td>.*</td></tr>'
     return [Game(m) for m in re.finditer(pattern, content)]
 
 
@@ -152,7 +157,11 @@ def print_games_info(games: Collection[Game], name: str, depth: int = 0, newline
     prefix = depth * "   "
     print(prefix + name)
     print(prefix + "Amount:", len(games))
-    print(prefix + "Size:", round(functools.reduce(lambda a, b: a + b.gib, games, 0), 1), "GiB")
+    games_sum = functools.reduce(lambda a, b: a + b.mib, games, 0)
+    if games_sum > 1024:
+        print(prefix + "Size:", round(games_sum / 1024, 1), "GiB")
+    else:
+        print(prefix + "Size:", round(games_sum, 1), "MiB")
     if newline:
         print()
 
@@ -169,6 +178,11 @@ def run_gba():
 
 
 if __name__ == '__main__':
+    atari_2600 = UrlEntry(
+        "https://myrient.erista.me/files/No-Intro/Atari%20-%202600/",
+        "Atari 2600"
+    )
+
     g3ds_reg = UrlEntry(
         "https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%203DS%20(Decrypted)/",
         "Regular")
@@ -210,7 +224,7 @@ if __name__ == '__main__':
         "https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20U%20-%20WUX/",
         "Wii U")
 
-    all_games = CollectionEntry("All", [gba, gc, ds, g3ds, wii, wii_u])
+    all_games = CollectionEntry("All", [atari_2600, gba, gc, ds, g3ds, wii, wii_u])
 
     # Print data
 
