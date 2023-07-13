@@ -210,6 +210,10 @@ if __name__ == '__main__':
     redump_entry.entries.sort(key=lambda e: e.mib)
     print_entry_info(redump_entry)
 
+    miscellaneous_entry = parse_upper_dir("https://myrient.erista.me/files/Miscellaneous/")
+    miscellaneous_entry.entries.sort(key=lambda e: e.mib)
+    print_entry_info(miscellaneous_entry)
+
     # atari_2600 = UrlEntry(
     #     "https://myrient.erista.me/files/No-Intro/Atari%20-%202600/",
     #     "Atari 2600"
